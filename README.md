@@ -20,6 +20,10 @@ Reproducibility experiments of the MSc Thesis *"Large Causal Models for Temporal
 
 ---
 
+<img src="assets/lcm_overview.jpg" align="middle" alt="End-to-end overview of the large causal model (LCM) pipeline." />
+
+---
+
 <div align="center">
 
 | Classical Paradigm                       | Large Causal Models              |
