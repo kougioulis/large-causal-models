@@ -66,24 +66,13 @@ wandb/
 #data/
 
 # Jupyter notebooks & other source files
-notebooks/_test.ipynb
-notebooks/corr_test.ipynb
-notebooks/prior_test.ipynb
-notebooks/_sanity_tests.ipynb
-notebooks/_test_stash.ipynb
+notebooks/dynotears_sanity.ipynb
 notebooks/patch_test.ipynb
 
 # Other source files, private scripts
 src/utils/utils_test.py
 src/utils/cp_utils.py
-scripts/test_script.py
-scripts/recursion_depth.py
-scripts/prepare_data.py
-scripts/prepare_interv_data.py
-scripts/prepare_sim_interv_data.py
-scripts/permute_datasets.py
-scripts/shardify_pt_list.py
-scripts/merge_synthetic_simulated_data.ipynb
+scripts/
 
 # private files & scripts related to training
 configs/default.yaml
@@ -120,6 +109,7 @@ src/models/patchtstinformer_learnable_pos
 src/models/patchinformer
 src/models/patchtstinformer
 src/models/patchmlpinformer
+src/models/misc
 src/metrics
 
 outputs/updated-arch
