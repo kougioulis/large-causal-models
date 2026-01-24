@@ -4,15 +4,17 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import torch
-from causalnex.structure import StructureModel
+#from causalnex.structure import StructureModel
+
 from causalnex.structure.dynotears import from_pandas_dynamic
+#from causalnex.structure import structure_model
 
 from src.utils.transformation_utils import (_from_full_to_lagged_adj,
                                             group_lagged_nodes)
 
 """ _____________________________________________ DYNOTEARS _____________________________________________ """
 
-def reverse_order_sm(sm: StructureModel) -> list:
+def reverse_order_sm(sm) -> list:
     """
     Returns the reversed order of the nodes of the SM object, similar to the SCM generator.
     See the custom generator for details.
@@ -30,7 +32,7 @@ def reverse_order_sm(sm: StructureModel) -> list:
     return temp
 
 
-def regular_order_sm(sm: StructureModel) -> list:
+def regular_order_sm(sm) -> list:
     """
     Returns the reversed order of the nodes of the SM object, similar to the SCM generator.
     See the custom generator for details.
