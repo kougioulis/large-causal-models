@@ -1,6 +1,6 @@
 from typing import Tuple
 
-import lightning.pytorch as pl
+import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 from torch.optim import AdamW
@@ -64,7 +64,7 @@ class InformerModule(pl.LightningModule):
             self.multi_loss = VanillaMultiLoss(n_losses=2)
         else:
             self.multi_loss = None
-            self.loss_term_scaling = torch.tensor([1.0, 0.25], device=self.device)
+            self.loss_term_scaling = torch.tensor([1.0, 0.75], device=self.device)
 
     def _setup_metrics(self) -> None:
         """Initialize validation metrics."""
