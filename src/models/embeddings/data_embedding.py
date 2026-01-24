@@ -6,7 +6,7 @@ from src.models.embeddings.token_embedding import *
 
 
 class InputEmbedding(nn.Module):
-    def __init__(self, c_in, d_model, dropout=0.1, max_length=5000, kernel_size=3):
+    def __init__(self, c_in, d_model, dropout=0.1, max_length=500, kernel_size=3):
         """
         Input Embedding Class
         This class consists of a 1D convolutional embedding of the input time-series, with positional embeddings added element-wise, and passed
