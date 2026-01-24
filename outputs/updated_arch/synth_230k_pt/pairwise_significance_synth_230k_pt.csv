@@ -1,2 +1,0 @@
-model_a,model_b,n_shared_samples,mean_a ± std,mean_b ± std,raw_p_value,adjusted_alpha,significant_after_correction
-LCM_9.4M,LCM_9.1M_modifiedperm_CI_CR_12_3_synth_230k_sim_34k_pt,2000,0.7891 ± 0.1481,0.8049 ± 0.1470,6.294421696612942e-16,0.05,Yes
