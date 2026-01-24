@@ -121,3 +121,9 @@ src/models/patchinformer
 src/models/patchtstinformer
 src/models/patchmlpinformer
 src/metrics
+
+outputs/updated-arch
+outputs/interv
+#outputs/prior
+
+environment_training.yaml
