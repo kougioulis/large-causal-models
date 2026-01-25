@@ -252,6 +252,30 @@ plot_adjacency_heatmaps(
 
 For visualization of the predicted graphs, comparison to ground truth, and additional experiments (ablations, zero-shot transfer, realistic datasets), refer to the accompanying notebook (`illustrative_example.ipynb`).
 
+---
+
+## FAQ
+
+<details>
+  <summary><i>What causal assumptions do LCMs make?</i></summary>
+
+LCMs rely on standard causal assumptions to ensure discovered graphs are interpretable and causal conclusions are valid. Specifically, the assumptions are:
+
+1. **Causal Markov Condition**  
+2. **Faithfulness**  
+3. **Causal Sufficiency** (no latent confounding variables)  
+4. **No contemporaneous effects** (i.e., no intra-lag causality; for example, no hourly causal effects when daily causation is assumed)
+
+</details>
+
+<details>
+  <summary><i>The maximum number of input variables is 12. What if my dataset has more variables?</i></summary>
+
+We believe this input bound reflects a practical trade-off between robust model performance and generalization, allowing application to real-world scenarios. Since causal graphs are in general parse, we recommend first applying a time-series feature selection method (e.g., *Chronoepilogi*), and then performing causal discovery on the reduced variable set.
+
+</details>
+
+
 ## Test Sets
 
 We additionally provide the test sets for the experimental evaluations present in the text, available via Google Drive links. The fMRI collections are available in the `data` folder. The synthetic CDML collections is not presented in the main text and can serve as an additional synthetic benchmark.
@@ -295,28 +319,6 @@ We additionally provide the test sets for the experimental evaluations present i
 
 ---
 
-## FAQ
-
-<details>
-  <summary><i>What causal assumptions do LCMs make?</i></summary>
-
-LCMs rely on standard causal assumptions to ensure discovered graphs are interpretable and causal conclusions are valid. Specifically, the assumptions are:
-
-1. **Causal Markov Condition**  
-2. **Faithfulness**  
-3. **Causal Sufficiency** (no latent confounding variables)  
-4. **No contemporaneous effects** (i.e., no intra-lag causality; for example, no hourly causal effects when daily causation is assumed)
-
-</details>
-
-<details>
-  <summary><i>The maximum number of input variables is 12. What if my dataset has more variables?</i></summary>
-
-We believe this input bound reflects a practical trade-off between robust model performance and generalization, allowing application to real-world scenarios. Since causal graphs are in general parse, we recommend first applying a time-series feature selection method (e.g., *Chronoepilogi*), and then performing causal discovery on the reduced variable set.
-
-</details>
-
----
 
 ## Citation
 
