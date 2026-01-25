@@ -237,7 +237,7 @@ from src.utils.metrics import custom_binary_metrics
 print(f"AUC: {custom_binary_metrics(pred, Y_cpd)[0]}")
 ```
 
-The model succesfully We can also visualize lag-wise heatmaps against the known ground truth:
+The model succesfully discovers all causal effects, resulting in a perfect AUC score. We can also visualize lag-wise heatmaps against the known ground truth:
 
 ```python
 plot_adjacency_heatmaps(
@@ -254,7 +254,8 @@ For visualization of the predicted graphs, comparison to ground truth, and addit
 
 ## Test Sets
 
-We additionally provide the test sets for the experimental evaluations, available via Google Drive links. The fMRI collections are available in the `data` folder. 
+We additionally provide the test sets for the experimental evaluations present in the text, available via Google Drive links. The fMRI collections are available in the `data` folder. The synthetic CDML collections is not presented in the main text and can serve as an additional synthetic benchmark.
+
 
 ### Synthetic
 
