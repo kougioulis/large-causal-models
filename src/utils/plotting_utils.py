@@ -351,8 +351,8 @@ def plot_comparison(
     _ = plot_structure(temp_adj_pd=label_pd, ax=axs[0], node_color=label_node_color, node_size=node_size)
     _ = plot_structure(temp_adj_pd=pred_pd, ax=axs[1], node_color=pred_node_color, node_size=node_size)
 
-    axs[0].set_title("Ground Truth Graph", fontsize=18)
-    axs[1].set_title("Predicted Graph", fontsize=18)
+    axs[0].set_title("Ground Truth Causal Graph", fontsize=18)
+    axs[1].set_title("Discovered Causal Graph", fontsize=18)
     plt.tight_layout()
     plt.show()
 
@@ -462,3 +462,179 @@ def plot_adjacency_matrices(pred_adj: torch.Tensor, true_adj: torch.Tensor) -> N
         plt.title(f"Output (lag {lag})")
         plt.colorbar()
         plt.show()
+
+
+def _draw_styled_dag(adj_pd, ax, node_colors, node_size=1400, title=None):
+    """
+    Helper function for fancy drawing of a lagged causal graph"""
+    G = nx.from_pandas_adjacency(adj_pd, create_using=nx.DiGraph)
+
+    # layout: group by time-lag for block structure
+    pos = {}
+    columns = list(adj_pd.columns)
+    groups = {}
+    for col in columns:
+        base, _, lag = col.partition("_t-")
+        lag = int(lag) if lag.isdigit() else 0
+        groups.setdefault(lag, []).append(col)
+
+    x_off = 2.0
+    y_off = 1.3
+    #for i, lag in enumerate(sorted(groups.keys())):
+    for i, lag in enumerate(sorted(groups.keys(), reverse=True)):
+        ys = np.linspace(0, -y_off*(len(groups[lag])-1), len(groups[lag]))
+        for y, node in zip(ys, groups[lag]):
+            pos[node] = (i * x_off, y)
+
+    # classify edges
+    self_edges = []
+    cross_edges = []
+    for u, v in G.edges():
+        if u.split("_t")[0] == v.split("_t")[0]:
+            self_edges.append((u, v))
+        else:
+            cross_edges.append((u, v))
+
+    # draw nodes
+    nx.draw_networkx_nodes(
+        G, pos, node_size=node_size,
+        node_color=node_colors, edgecolors="black", linewidths=0.8,
+        ax=ax, alpha=0.9
+    )
+
+    # draw edges
+    nx.draw_networkx_edges(
+        G, pos, edgelist=cross_edges,
+        arrows=True, arrowstyle='-|>',
+        arrowsize=40,
+        width=2.0,
+        edge_color='black',
+        connectionstyle='arc3,rad=0.00',
+        min_source_margin=5.50,  # distance from source node
+        min_target_margin=5.50,  # distance from target node
+        ax=ax
+    )
+    nx.draw_networkx_edges(
+        G, pos, edgelist=self_edges,
+        arrows=True, arrowstyle="-|>", arrowsize=40,
+        width=1.8, edge_color="gray", alpha=0.4,
+        connectionstyle="arc3,rad=0.0",
+        min_source_margin=5.5,
+        min_target_margin=5.5,
+        ax=ax
+    )
+
+    # draw labels as latex: X^{i}_{t-k}
+    labels = {}
+    for node in G.nodes:
+        var_name, _, lag = node.partition("_t-")
+        lag = int(lag) if lag.isdigit() else 0
+        if lag == 0:
+            labels[node] = rf"$\mathrm{{{var_name}}}$"
+
+        else:
+            labels[node] = rf"${var_name}_{{t-{lag}}}$"
+            labels[node] = rf"$\mathrm{{{var_name}}}_{{t-{lag}}}$"
+
+    nx.draw_networkx_labels(G, pos, labels=labels, font_size=10, ax=ax)
+
+    # formatting
+    ax.set_title(title, fontsize=15, pad=4)
+    ax.set_xticks([]); ax.set_yticks([])
+    ax.set_frame_on(True)
+    for spine in ax.spines.values():
+        spine.set_visible(True)
+        spine.set_alpha(0.3)
+
+
+def plot_comparison_fancy(
+        label_lagged: torch.Tensor, 
+        pred_lagged: torch.Tensor,  
+        threshold: float = 0.05,
+        X: torch.Tensor = None,
+        node_names: list = None, 
+        color_palette: str ='tab10', 
+        node_size: int = 1400,
+        minimal: bool = True,
+        max_ts: int = 150
+):
+    """
+    Fancy, paper-grade comparison plot of i) the predicted lagged causal graph and ii) the ground truth causal graph.
+    Also plots the input time series X, if provided. Based on `plot_comparison`.
+    """
+
+    # --- convert tensors to adjacency pandas ---
+    label_pd, label_figsize = process_lagged_adj(
+        lagged_adj=label_lagged, 
+        threshold=threshold, 
+        node_names=node_names, 
+        reduce=True
+    )
+    pred_pd, pred_figsize = process_lagged_adj(
+        lagged_adj=pred_lagged, 
+        threshold=threshold, 
+        node_names=node_names, 
+        reduce=True
+    )
+
+    # align prediction to truth if needed
+    for col in label_pd.columns:
+        if col not in pred_pd.columns:
+            pred_pd.loc[:, col] = 0
+            pred_pd.loc[col, :] = 0
+
+    pred_pd = pred_pd.loc[regular_order_pd(pred_pd), regular_order_pd(pred_pd)]
+
+    if minimal:
+        pred_pd = pred_pd.loc[label_pd.columns, label_pd.columns].copy()
+
+    print(f'label_pd column names: {label_pd.columns}')
+    print(f'pred_pd column names: {pred_pd.columns}')
+
+    # color palette
+    import seaborn as sns
+    unlagged = sorted(set(col.split("_t")[0] for col in label_pd.columns))
+    palette = sns.color_palette(color_palette, n_colors=len(unlagged))
+    color_map = dict(zip(unlagged, palette))
+
+    label_colors = [color_map[col.split("_t")[0]] for col in label_pd.columns]
+    pred_colors = [color_map[col.split("_t")[0]] for col in pred_pd.columns]
+
+    # figure mosaic: left GT, middle Pred, right TS
+    fig = plt.figure(figsize=(16, 8))
+    mosaic = """
+    AB
+    AC
+    """
+    axd = fig.subplot_mosaic(mosaic, width_ratios=[1.2, 1.4])
+    
+    ax_gt = axd["A"]
+    ax_pred = axd["B"]
+    ax_ts = axd["C"]
+
+    # draw styled DAGs
+    _draw_styled_dag(label_pd, ax_gt, label_colors, node_size=node_size, title="Ground Truth Causal Graph")
+    _draw_styled_dag(pred_pd, ax_pred, pred_colors, node_size=node_size, title="Discovered Causal Graph")
+
+    # time series panel
+    if X is not None:
+        X = X.detach().cpu().numpy() if hasattr(X, "detach") else X
+        T = min(len(X), max_ts)
+        t = np.arange(T)
+        for i, var in enumerate(unlagged):
+            ax_ts.plot(t, X[:T, i], lw=1.4, color=color_map[var], label=var)
+        ax_ts.set_title("Sample Time Series", fontsize=14)
+        #ax_ts.set_xlabel("Time", fontsize=10)
+        ax_ts.grid(alpha=0.25, lw=0.4)
+        ax_ts.set_yticks([])
+        ax_ts.set_xticks([])
+        ax_ts.spines['top'].set_alpha(0.5)
+        ax_ts.spines['right'].set_alpha(0.5)
+        ax_ts.spines['left'].set_alpha(0.5)
+        ax_ts.spines['bottom'].set_alpha(0.5)
+        ax_ts.tick_params(labelsize=8)
+
+    fig.tight_layout(pad=0.8)
+    plt.show()
+
+    return fig
