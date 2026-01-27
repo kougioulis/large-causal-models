@@ -4,9 +4,8 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import torch
-#from causalnex.structure import StructureModel
 
-from causalnex.structure.dynotears import from_pandas_dynamic
+from src.utils.causalnex.structure.dynotears import from_pandas_dynamic
 #from causalnex.structure import structure_model
 
 from src.utils.transformation_utils import (_from_full_to_lagged_adj,
