@@ -30,6 +30,7 @@ from src.utils.transformation_utils import from_fmri_to_lagged_adj
 from src.utils.utils import check_non_stationarity, to_stationary_with_finite_differences, lagged_batch_crosscorrelation, \
     run_varlingam_with_bootstrap
 
+
 def timing(f: callable) -> callable:
     """
     Just a timing decorator.
@@ -240,6 +241,9 @@ def load_sharded_dataset(base_path: Path, split: str):
         raise FileNotFoundError(f"Split folder not found: {split_path}")
 
     shard_files = sorted(split_path.glob(f"{split}_merged_shard*.pt"))
+    if not shard_files:
+        print("Trying naming convention")
+        shard_files = sorted(split_path.glob(f"{split}_shard*.pt"))
     if not shard_files:
         print(f"No shards found, trying single file {split}.pt")
         single_file = split_path / f"{split}.pt"
