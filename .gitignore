@@ -67,7 +67,6 @@ wandb/
 
 # Jupyter notebooks & other source files
 notebooks/dynotears_sanity.ipynb
-notebooks/patch_test.ipynb
 
 # Other source files, private scripts
 src/utils/utils_test.py

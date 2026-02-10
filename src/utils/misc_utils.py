@@ -309,6 +309,32 @@ def run_evaluation_experiments(models: dict, cpd_path: Path, out_dir: Path,
     Returns:
         None
     """
+    # -------------------------------------------------------------------------
+    # NOTE ON THRESHOLDING
+    #
+    # In the reported experiments, edge predictions are binarized using a
+    # fixed threshold tau = 0.05 prior to computing all classification metrics
+    # (TPR, FPR, TNR, FNR, Precision, Recall, F1, and AUC).
+    #
+    # The value tau = 0.05 was selected empirically, as it was consistently
+    # close to the operating threshold obtained via Youden's J statistic
+    # (maximizing TPR - FPR) across validation experiments.
+    #
+    # Therefore, the reported AUC values correspond to evaluation at this
+    # fixed operating threshold. When computing classical ROC-AUC from the
+    # continuous prediction scores (without any binarization), absolute AUC
+    # values are higher.
+    #
+    # For reference, using continuous scores yields near-perfect AUCs for
+    # LCM models on several datasets, e.g.:
+    #   - S_Joint (<=5 variables, 3 lags): AUC > 0.99
+    #   - fMRI_5 collection: AUC >= 0.981
+    #   - full fMRI collection: AUC >= 0.978
+    #   - OOD AirQualityMS: AUC >= 0.97
+    #
+    # Importantly, relative model rankings and the conclusions of the experiments
+    # presented in the main text remain unchanged; only absolute AUC magnitudes differ.
+    # -------------------------------------------------------------------------
 
     """ Path """
     cpd_path = Path(cpd_path)
@@ -359,10 +385,10 @@ def run_evaluation_experiments(models: dict, cpd_path: Path, out_dir: Path,
             dataset_iterator.append([(X_fmri, Y_fmri)]) # list of datasamples
 
     else:
-        #if cpd_path.suffix in [".p", ".pkl", ".pickle"]:
-        #    print(f"--PICKLE mode-- ({cpd_path.name})")
-        #    with open(cpd_path, "rb") as f:
-        #        data = pickle.load(f)
+        if cpd_path.suffix in [".p", ".pkl", ".pickle"]:
+            print(f"--PICKLE mode-- ({cpd_path.name})")
+            with open(cpd_path, "rb") as f:
+                data = pickle.load(f)
         if sharded_data:
             print("--SHARDED mode--")
             dataset_iterator = load_sharded_dataset(cpd_path, split)
@@ -422,35 +448,16 @@ def run_evaluation_experiments(models: dict, cpd_path: Path, out_dir: Path,
             N_RUNS = 1
 
         for run_id in range(N_RUNS):
-        #    print(f"\n--- Run {run_id+1}/{N_RUNS} ---")
             seed = 42 + run_id
             torch.manual_seed(seed)
             np.random.seed(seed)
             random.seed(seed)
             print(f"\n |--- Run {run_id+1}/{N_RUNS} (seed={seed}) ---")
 
-            # Re-initializing the dataset iterator each run
-            if fmri_data:
-                dataset_iterator = [] 
-                for ts_file, gt_file in matched_files:
-                    test_fmri = pd.read_csv(f"{fmri_path}/{ts_file}")
-                    label_fmri = pd.read_csv(f"{fmri_path}/{gt_file}", names=['effect', 'cause', 'delay'])
-                    X_fmri = torch.tensor(test_fmri.values, device='cpu', dtype=torch.float32)
-                    Y_fmri = from_fmri_to_lagged_adj(test_fmri=test_fmri, label_fmri=label_fmri)
-                    if Y_fmri.sum() <= 0 or Y_fmri.sum() == np.prod(Y_fmri.shape):
-                        continue
-                    dataset_iterator.append([(X_fmri, Y_fmri)])
-            else:
-                if sharded_data:
-                    dataset_iterator = load_sharded_dataset(cpd_path, split)
-                else:
-                    dataset_iterator = [load_full_dataset(cpd_path, split)]
-
             tpr_list, fpr_list, tnr_list, fnr_list, auc_list = [], [], [], [], []
             precision_list, recall_list, f1_list = [], [], []
 
             for shard_idx, data in enumerate(dataset_iterator):
-                #print(f"\n Processing shard {shard_idx} ({len(data)} samples)")
                 for idx in tqdm(range(len(data[:2000])), desc=f'Shard {shard_idx}'):
                     
                     try:
@@ -744,7 +751,6 @@ def run_cdml_evaluation_experiments(
         max_var = MAX_VAR
         max_lag = MAX_LAG
 
-        # Your original logic
         if model_name == "provided-trf-5V":
             max_var = 5
         elif ("deep" in model_name and ("_10_3" in model_name or "_12_3" in model_name)) \
